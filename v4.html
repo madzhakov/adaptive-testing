@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Internship Project: AI for Adaptive Testing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Melexis Corporate Blue & Green -->
+    <!-- Application Structure Plan: A single-page, linear layout with a sticky top navigation bar was chosen for this project plan. This structure is highly intuitive for a document-based content, allowing interns to scroll through the plan as a continuous story or use the navigation to jump directly to a specific week or section. The goal is clarity, readability, and ease of access, making it a perfect reference document they can keep open. The non-linear, dashboard approach was not suitable as the content has a clear chronological and logical flow (from concept to weekly tasks). -->
+    <!-- Visualization & Content Choices: The source report is a textual project plan. Goal: Inform & Guide. Presentation Method: Structured HTML with clear typography, using cards (styled divs) to visually separate key concepts like the 6 project steps or ML theory points. Interaction: The primary interaction is smooth-scrolling navigation to facilitate easy movement within the single page. An animated visualization of boosting was added using HTML/CSS/JS to make a core concept more intuitive. Justification: This approach turns a plain text document into a more engaging and professional-looking resource without adding unnecessary complexity. It prioritizes readability and structure. Method: HTML/CSS with Tailwind, Vanilla JS for navigation and animation. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Lighter Gray */
+            color: #334155; /* Slate 700 */
+        }
+        .section-card {
+            background-color: #FFFFFF;
+            border: 1px solid #e2e8f0; /* Slate 200 */
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .section-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.07), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .melexis-blue { color: #002D5A; }
+        .melexis-green-text { color: #00A651; }
+        .bg-melexis-blue { background-color: #002D5A; }
+        .bg-melexis-green { background-color: #00A651; }
+        
+        .viz-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            background-color: #f1f5f9; /* Slate 100 */
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0; /* Slate 200 */
+            overflow: hidden;
+        }
+        .dot {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0.7;
+            z-index: 10;
+        }
+        .line-segment {
+            position: absolute;
+            height: 2px;
+            background-color: #ef4444;
+            transform-origin: left center;
+            transition: all 0.5s ease-in-out;
+        }
+        .boundary-line {
+            position: absolute;
+            background-color: #ef4444;
+            transition: all 0.3s ease-in-out;
+            transform: scale(0);
+            z-index: 20;
+        }
+        .wafer-container {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            margin: auto;
+        }
+        #wafer-map {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #e0e7ff;
+            overflow: hidden;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .wafer-grid {
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 3px;
+        }
+        .wafer-die {
+            width: 100%;
+            padding-bottom: 100%;
+            background-color: #c7d2fe;
+            border-radius: 2px;
+            transition: background-color 0.2s;
+        }
+        .wafer-die:hover {
+            background-color: #60a5fa;
+        }
+        .wafer-die.highlighted {
+            background-color: #ef4444;
+        }
+        .wafer-notch {
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 10px;
+            background-color: #f8fafc;
+        }
+        .dist-bar {
+            background-color: #60a5fa;
+            transition: height 0.3s ease-out;
+            flex-grow: 1;
+        }
+        .lit-card {
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .lit-card:hover {
+            border-color: #00A651;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-slate-200">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <h1 class="text-lg font-bold melexis-blue">Internship Project Plan</h1>
+            <div class="hidden md:flex space-x-6 text-sm font-medium">
+                <a href="#concept" class="text-slate-600 hover:melexis-green-text transition-colors">Concept</a>
+                <a href="#phase1" class="text-slate-600 hover:melexis-green-text transition-colors">Phase 1</a>
+                <a href="#phase2" class="text-slate-600 hover:melexis-green-text transition-colors">Phase 2</a>
+                <a href="#literature" class="text-slate-600 hover:melexis-green-text transition-colors">Literature</a>
+                <a href="#timeline" class="text-slate-600 hover:melexis-green-text transition-colors">Timeline</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-12">
+
+        <section class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold melexis-blue">Melexis Academy</h1>
+            <p class="text-2xl md:text-3xl text-slate-700 mt-1">Test & Industrialization Project</p>
+            <p class="text-xl melexis-green-text font-semibold mt-4">AI for Adaptive Testing & Test Cost Reduction</p>
+            <p class="mt-6 max-w-3xl mx-auto text-lg text-gray-600">Welcome to the team! This project is an exciting opportunity to explore how AI and Machine Learning can solve real-world engineering challenges in the semiconductor industry.</p>
+            <p class="mt-4 max-w-3xl mx-auto text-md text-gray-500">This is not a structured ML training course, but an opportunity to dip into this domain with a hands-on project. You are highly encouraged to <strong>use Gemini as your AI assistant</strong> throughout this task to help you with coding, debugging, and understanding new concepts.</p>
+        </section>
+
+        <section id="concept" class="mb-16">
+            <div class="section-card p-8">
+                <h2 class="text-2xl font-bold melexis-blue mb-4">Project Concept: AI-Driven Adaptive Testing</h2>
+                <p class="text-gray-600">The core concept is to use a powerful Machine Learning model, <strong>XGBoost</strong>, to create an <strong>adaptive test flow</strong>. Instead of testing every parameter on every die, we will train a model on data from an early test stage (PR1) to predict the outcome of a long, expensive test in a later stage (PR2). If the model is confident a part will pass, we can safely skip that test; if it flags a part as high-risk, we run the test. This selective approach, known as adaptive testing, saves significant time and cost while maintaining quality.</p>
+            </div>
+        </section>
+
+        <section id="phase1" class="mb-16">
+            <h2 class="text-3xl font-bold text-center melexis-blue mb-10">Phase 1: Data Analysis and Target Selection</h2>
+             <div class="section-card p-8">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Part 1: Understanding Your Data</h3>
+                <p class="text-slate-600 mb-6">Raw test logs contain identifier columns and many measurement columns. We will tidy them and choose a PR2 target to model later.</p>
+                <div class="grid md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                        <h4 class="font-semibold text-lg text-slate-800 mb-2">Log File Structure</h4>
+                        <p class="text-sm text-slate-600 mb-2">The raw data file is a table. The first rows may contain limits and units, followed by one row per die.</p>
+                        <table class="w-full text-xs text-left mt-2 border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100">
+                                    <th class="p-2 border border-slate-200">device_id</th><th class="p-2 border border-slate-200">lot id</th><th class="p-2 border border-slate-200 text-blue-600">Param_A</th><th class="p-2 border border-slate-200 text-green-600">Param_B</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-slate-50"><td class="p-2 border border-slate-200 font-semibold">lower limit</td><td class="p-2 border border-slate-200">...</td><td class="p-2 border border-slate-200 text-blue-600">0.9</td><td class="p-2 border border-slate-200 text-green-600">50.0</td></tr>
+                                <tr class="bg-slate-50"><td class="p-2 border border-slate-200 font-semibold">upper limit</td><td class="p-2 border border-slate-200">...</td><td class="p-2 border border-slate-200 text-blue-600">1.1</td><td class="p-2 border border-slate-200 text-green-600">100.0</td></tr>
+                                <tr class="bg-slate-50"><td class="p-2 border border-slate-200 font-semibold">unit</td><td class="p-2 border border-slate-200">...</td><td class="p-2 border border-slate-200 text-blue-600">V</td><td class="p-2 border border-slate-200 text-green-600">mA</td></tr>
+                                <tr><td class="p-2 border border-slate-200">device1</td><td class="p-2 border border-slate-200">C0001</td><td class="p-2 border border-slate-200 text-blue-600">1.02</td><td class="p-2 border border-slate-200 text-green-600">75.3</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div>
+                         <h4 class="font-semibold text-lg text-slate-800 mb-2">Metadata and Measurements</h4>
+                        <p class="text-sm text-slate-600 mb-2">Use identifiers to join PR1 and PR2. The model will learn from PR1 measurement columns only.</p>
+                         <div class="relative p-4 border border-slate-200 rounded-md">
+                            <div class="wafer-container">
+                                <div id="wafer-map"><div class="wafer-grid"></div></div>
+                                <div class="wafer-notch"></div>
+                            </div>
+                            <p id="wafer-tooltip" class="absolute bottom-2 right-2 text-xs bg-white/80 px-2 py-1 rounded">Hover over a die</p>
+                        </div>
+                    </div>
+                </div>
+                 <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="font-semibold text-lg text-slate-800 mb-2">Test Program Structure</h4>
+                        <p class="text-sm text-slate-600">The test program is structured hierarchically. Parent tests (<code>.cpp</code> files) contain individual parameter tests. The mapping file links parameters to their <code>.cpp</code>.</p>
+                         <div class="text-sm mt-2 p-3 bg-slate-50 rounded border border-slate-200">
+                            <p class="font-semibold">test_VDDA.cpp</p>
+                            <ul class="list-disc list-inside ml-4 text-slate-600">
+                                <li>Vo_VSUPNom_VDDA</li>
+                                <li>Vo_VSUPMin_VDDA</li>
+                                <li>K_LoadRegulation_VDDA</li>
+                                <li>...and so on</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-slate-800 mb-2">Example: Param B Distribution</h4>
+                        <p class="text-sm text-slate-600 mb-4">Measurements form a distribution. Any part with a measurement outside the specification limits fails that test.</p>
+                        <div class="relative h-24 border border-slate-200 rounded-md p-2 flex items-end justify-center space-x-px">
+                             <div class="absolute top-0 left-0 w-full h-full p-2 flex justify-between text-xs text-red-500 font-semibold"><span>LSL</span><span>USL</span></div>
+                             <div class="absolute top-0 left-2 w-px h-full bg-red-400"></div>
+                             <div class="absolute top-0 right-2 w-px h-full bg-red-400"></div>
+                             <div id="dist-viz" class="w-full h-full flex items-end justify-center"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-8 border-slate-200">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Part 2: Your Goals for this Phase</h3>
+
+                <!-- Keep the Drive link visible -->
+                <div class="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-r-lg mb-6">
+                    <p><span class="font-bold">Data Files:</span> All necessary data files for your assigned project can be found here: <a href="https://drive.google.com/drive/folders/1dNyfq6n_xQoG4cja-liYm1xft_cfksVB?usp=drive_link" target="_blank" class="font-semibold underline">Project Data Folder</a></p>
+                </div>
+
+                <!-- Simplified checklist without data dictionary -->
+                <div class="section-card p-8 mt-4">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4">Phase 1 Task Checklist</h3>
+                    <ol class="list-decimal list-inside space-y-3 text-slate-700">
+                        <li><span class="font-semibold">Ingest and Normalize:</span> Read PR1 and PR2, including header rows for limits and units. Standardize keys <code>device_id, lot_id, wafer, x, y</code>.</li>
+                        <li><span class="font-semibold">Merge PR1 to PR2:</span> Inner join on the keys. Check counts before and after the merge to confirm you did not lose devices. Save <code>merged_dataset.csv</code>.</li>
+                        <li><span class="font-semibold">Pareto of Time:</span> Use <code>test_times_yield_by_cpp.csv</code> to create a time Pareto by <code>.cpp</code>. Select one PR2 target and give a short reason based on time share and risk.</li>
+                        <li><span class="font-semibold">Define the PR2 Target:</span> Choose the long or expensive PR2 test (or a small group). Map PASS and FAIL to 1 and 0. Note the overall pass rate.</li>
+                        <li><span class="font-semibold">Target Visualization:</span>
+                            <ul class="list-disc list-inside ml-5 mt-1">
+                                <li>Plot histograms of the PR2 target tests, which are included in the .cpp</li>
+                                <li>Plot a bar chart of number of fails per test within the .cpp</li>
+                            </ul>
+                        </li>
+                        <li><span class="font-semibold">Quick Sanity:</span> Features must be PR1 only, the merge coverage looks reasonable, and your PASS and FAIL mapping is written in the notebook.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <section id="phase2" class="mb-16">
+            <h2 class="text-3xl font-bold text-center melexis-blue mb-10">Phase 2: ML Model Training and Analysis</h2>
+             <div class="section-card p-8">
+                <p class="text-lg text-slate-600 mb-6">With a clean dataset and a clear PR2 target, this phase is focused on building, evaluating, and refining our predictive model.</p>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                    <h3 class="font-bold text-lg text-blue-800 mb-2">Your Goals for this Phase</h3>
+                    <ol class="list-decimal list-inside space-y-2 text-blue-700">
+                        <li>Train an XGBoost model using PR1 features to predict the PR2 target.</li>
+                        <li>Use grouped validation by lot to estimate real performance.</li>
+                        <li>Select a decision threshold that meets the escape rate requirement. Report skip rate and time saving.</li>
+                        <li>Review feature importance and write one or two engineering insights.</li>
+                        <li>Optional: investigate any test escapes to understand why they were missed.</li>
+                    </ol>
+                </div>
+                <hr class="my-8 border-slate-200">
+                <h3 class="text-xl font-bold text-slate-800 mb-4">Key Concepts for Model Analysis</h3>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200"><h4 class="font-semibold text-slate-800">Confusion Matrix</h4><p class="text-sm text-slate-600">A summary of correct predictions and errors. False negatives are test escapes. False positives are yield loss.</p></div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200"><h4 class="font-semibold text-slate-800">Feature Importance</h4><p class="text-sm text-slate-600">Which PR1 measurements were most useful for predictions.</p></div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200"><h4 class="font-semibold text-slate-800">Threshold by Constraint</h4><p class="text-sm text-slate-600">Choose the lowest probability threshold that keeps escapes under the ppm target. Report the resulting skip rate and time saving.</p></div>
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200"><h4 class="font-semibold text-slate-800">Grouped Validation</h4><p class="text-sm text-slate-600">Validate by lot to simulate new production. Optionally check by wafer.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Literature section (restructured) -->
+        <section id="literature" class="mb-16">
+            <h2 class="text-3xl font-bold text-center melexis-blue mb-10">Literature and Learning Path</h2>
+            <div class="section-card p-8">
+                <h3 class="text-xl font-bold text-slate-900 mb-6 text-center">What to Learn, In Order</h3>
+
+                <ol class="list-decimal list-inside max-w-3xl mx-auto text-slate-700 mb-10">
+                    <li><span class="font-semibold">Setup and Workflow:</span> Colab, Pandas or Numpy, plotting.</li>
+                    <li><span class="font-semibold">First Model:</span> fit, predict, evaluate with simple linear regression.</li>
+                    <li><span class="font-semibold">Evaluation and Generalization:</span> train and test split, cross validation, over and underfitting, loss.</li>
+                    <li><span class="font-semibold">Trees and Ensembles:</span> decision trees and gradient boosting.</li>
+                    <li><span class="font-semibold">XGBoost:</span> how it works, parameters, and a hands-on tutorial.</li>
+                    <li><span class="font-semibold">Optional Deep Dive:</span> Andrew Ng’s ML specialization.</li>
+                </ol>
+
+                <h3 class="text-xl font-bold text-slate-900 mb-6 text-center">Concepts and Visuals</h3>
+                <div class="grid md:grid-cols-2 gap-8 items-center mb-8">
+                    <div>
+                        <h4 class="font-semibold text-lg text-slate-800 mb-2">Concept 1: Iterative Fitting (Boosting)</h4>
+                        <p class="text-slate-600">Boosting adds simple models one by one, each correcting the previous model.</p>
+                    </div>
+                    <div>
+                        <div id="fitting-viz" class="viz-container"></div>
+                        <button id="animate-fit-btn" class="w-full mt-2 bg-melexis-green text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">Animate Fitting Concept</button>
+                    </div>
+                </div>
+                <div class="grid md:grid-cols-2 gap-8 items-center mb-8">
+                    <div>
+                        <h4 class="font-semibold text-lg text-slate-800 mb-2">Concept 2: Classification with Trees</h4>
+                        <p class="text-slate-600">Simple decision boundaries split the space into regions to separate classes.</p>
+                    </div>
+                    <div>
+                        <div id="class-viz" class="viz-container"></div>
+                        <button id="animate-class-btn" class="w-full mt-2 bg-melexis-blue text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-900 transition-colors">Animate Classification</button>
+                    </div>
+                </div>
+
+                <hr class="my-8 border-slate-200">
+
+                <h3 class="text-xl font-bold text-slate-900 mb-6 text-center">Fundamentals and Tutorials</h3>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between lit-card">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Setup and Workflow</h4>
+                            <p class="text-sm text-slate-600 mb-3">Colab, Pandas or Numpy, Matplotlib.</p>
+                        </div>
+                        <div>
+                            <a href="https://colab.research.google.com/notebooks/intro.ipynb" target="_blank" class="text-green-600 hover:underline font-medium text-sm block">Welcome to Colab</a>
+                            <a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/index.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Pandas: Intro Tutorials</a>
+                            <a href="https://numpy.org/doc/stable/user/quickstart.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">NumPy Quickstart</a>
+                            <a href="https://matplotlib.org/stable/tutorials/introductory/pyplot.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Matplotlib Pyplot</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between lit-card">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">First Model: Linear Regression</h4>
+                            <p class="text-sm text-slate-600 mb-3">The fit, predict, evaluate loop with scikit learn.</p>
+                        </div>
+                        <div>
+                            <a href="https://scikit-learn.org/stable/tutorial/basic/tutorial.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block">scikit learn: Basic Tutorial</a>
+                            <a href="https://scikit-learn.org/stable/modules/linear_model.html#ordinary-least-squares" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Linear Regression Guide</a>
+                            <a href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">train_test_split</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between lit-card">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Evaluation and Generalization</h4>
+                            <p class="text-sm text-slate-600 mb-3">Split data, avoid overfitting, define loss.</p>
+                        </div>
+                        <div>
+                            <a href="https://developers.google.com/machine-learning/crash-course/training-and-test-sets/splitting-data" target="_blank" class="text-green-600 hover:underline font-medium text-sm block">Train and Test Split (MLCC)</a>
+                            <a href="https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Cross Validation (sklearn)</a>
+                            <a href="https://developers.google.com/machine-learning/crash-course/generalization/video-lecture" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Over and Underfitting (MLCC)</a>
+                            <a href="https://developers.google.com/machine-learning/crash-course/reducing-loss/gradient-descent" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Loss and Gradient (MLCC)</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between lit-card">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Trees and Ensembles</h4>
+                            <p class="text-sm text-slate-600 mb-3">Decision trees and gradient boosting.</p>
+                        </div>
+                        <div>
+                            <a href="https://scikit-learn.org/stable/modules/tree.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block">Decision Trees (sklearn)</a>
+                            <a href="https://scikit-learn.org/stable/modules/ensemble.html#gradient-boosting" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Gradient Boosting (sklearn)</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between lit-card">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">XGBoost: Our Main Tool</h4>
+                            <p class="text-sm text-slate-600 mb-3">Docs, parameters, and a hands-on tutorial.</p>
+                        </div>
+                        <div>
+                            <a href="https://xgboost.readthedocs.io/en/stable/" target="_blank" class="text-green-600 hover:underline font-medium text-sm block">XGBoost Docs</a>
+                            <a href="https://xgboost.readthedocs.io/en/stable/parameter.html" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Parameters</a>
+                            <a href="https://www.datacamp.com/tutorial/xgboost-in-python" target="_blank" class="text-green-600 hover:underline font-medium text-sm block mt-1">Tutorial: XGBoost in Python (DataCamp)</a>
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-lg border border-slate-200 flex flex-col justify-between lit-card">
+                        <div>
+                            <h4 class="font-semibold text-slate-800 mb-2">Optional Deep Dive</h4>
+                            <p class="text-sm text-slate-600 mb-3">Andrew Ng’s ML Specialization.</p>
+                        </div>
+                        <div>
+                            <a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" class="text-green-600 hover:underline font-medium text-sm block">Andrew Ng — ML Specialization</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="timeline" class="mb-16">
+             <h2 class="text-3xl font-bold text-center melexis-blue mb-10">Project Details</h2>
+             <div class="grid md:grid-cols-2 gap-8">
+                <div class="section-card p-8">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Key Contact</h3>
+                    <p class="text-slate-800 font-semibold">Miroslav Madzhakov</p>
+                    <p class="text-slate-600">Test Development and Industrialization Manager</p>
+                    <a href="mailto:mmz@melexis.com" class="melexis-green-text hover:underline">mmz@melexis.com</a>
+                </div>
+                <div class="section-card p-8">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Suggested Timeline</h3>
+                    <ul class="space-y-2">
+                        <li><span class="font-semibold">Week 1: Foundations</span> Complete Phase 1 tasks and review literature.</li>
+                        <li><span class="font-semibold">Weeks 2-3: Model Building</span> Prepare data, train the model, and select a threshold.</li>
+                        <li><span class="font-semibold">Week 4: Finalizing</span> Prepare and give your final presentation.</li>
+                    </ul>
+                </div>
+                <div class="section-card p-8 md:col-span-2">
+                    <h3 class="text-2xl font-bold text-slate-900 mb-4">Success Criteria</h3>
+                    <ul class="space-y-2 text-slate-700">
+                        <li><span class="font-semibold">Escapes:</span> 20 ppm or less</li>
+                        <li><span class="font-semibold">Yield loss:</span> 1.0% or less</li>
+                        <li><span class="font-semibold">Time saving:</span> target percentage based on skip rate and PR2 test time</li>
+                        <li><span class="font-semibold">Validation:</span> grouped by lot, with wafer as an optional check</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200">
+        <div class="container mx-auto px-6 py-4 text-center text-sm text-slate-500">
+            <p>Melexis - Summer Internship Project</p>
+        </div>
+    </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetElement = document.querySelector(this.getAttribute('href'));
+                if (targetElement) {
+                    const headerOffset = 70;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    window.scrollTo({ top: offsetPosition, behavior: "smooth" });
+                }
+            });
+        });
+
+        // --- Animation 1: Fitting ---
+        const fitVizContainer = document.getElementById('fitting-viz');
+        const animateFitBtn = document.getElementById('animate-fit-btn');
+        
+        function createFitPoints() {
+            if (!fitVizContainer) return;
+            fitVizContainer.innerHTML = '';
+            for (let i = 0; i < 70; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.style.backgroundColor = '#00A651';
+                const x = 10 + Math.random() * 80;
+                const y = 10 * Math.sin(x/10) + 45 + (Math.random() - 0.5) * 25;
+                dot.style.left = `${x}%`;
+                dot.style.top = `${y}%`;
+                fitVizContainer.appendChild(dot);
+            }
+        }
+
+        function drawPolyline(points, container) {
+             container.querySelectorAll('.line-segment').forEach(el => el.remove());
+             for (let i = 0; i < points.length - 1; i++) {
+                const p1 = points[i];
+                const p2 = points[i+1];
+                const p1_px = { x: p1.x * container.offsetWidth / 100, y: p1.y * container.offsetHeight / 100 };
+                const p2_px = { x: p2.x * container.offsetWidth / 100, y: p2.y * container.offsetHeight / 100 };
+                const dx = p2_px.x - p1_px.x;
+                const dy = p2_px.y - p1_px.y;
+                const length = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+                const line = document.createElement('div');
+                line.classList.add('line-segment');
+                line.style.left = `${p1.x}%`;
+                line.style.top = `${p1.y}%`;
+                line.style.width = `${length}px`;
+                line.style.transform = `rotate(${angle}deg)`;
+                container.appendChild(line);
+            }
+        }
+
+        function animateFit() {
+            if (!fitVizContainer || !animateFitBtn) return;
+            animateFitBtn.disabled = true;
+            createFitPoints();
+            const steps = [
+                [{x: 0, y: 50}, {x: 100, y: 50}],
+                [{x: 0, y: 55}, {x: 50, y: 35}, {x: 100, y: 55}],
+                [{x: 0, y: 60}, {x: 25, y: 55}, {x: 50, y: 35}, {x: 75, y: 45}, {x: 100, y: 60}],
+                [{x: 0, y: 62}, {x: 15, y: 60}, {x: 35, y: 45}, {x: 50, y: 35}, {x: 65, y: 42}, {x: 85, y: 55}, {x: 100, y: 62}],
+                [{x: 0, y: 63}, {x: 15, y: 58}, {x: 30, y: 48}, {x: 45, y: 38}, {x: 55, y: 40}, {x: 70, y: 48}, {x: 85, y: 58}, {x: 100, y: 63}]
+            ];
+            let currentStep = 0;
+            const interval = setInterval(() => {
+                if (currentStep >= steps.length) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        fitVizContainer.querySelectorAll('.line-segment').forEach(el => el.remove());
+                        animateFitBtn.disabled = false;
+                    }, 1000);
+                    return;
+                }
+                drawPolyline(steps[currentStep], fitVizContainer);
+                currentStep++;
+            }, 800);
+        }
+        if (animateFitBtn) {
+            animateFitBtn.addEventListener('click', animateFit);
+            createFitPoints();
+        }
+
+        // --- Animation 2: Classification ---
+        const classVizContainer = document.getElementById('class-viz');
+        const animateClassBtn = document.getElementById('animate-class-btn');
+
+        function createClassPoints() {
+            if (!classVizContainer) return;
+            classVizContainer.innerHTML = '';
+            for (let i = 0; i < 120; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.style.backgroundColor = '#002D5A';
+                dot.style.left = `${5 + Math.random() * 90}%`;
+                dot.style.top = `${5 + Math.random() * 90}%`;
+                classVizContainer.appendChild(dot);
+            }
+            for (let i = 0; i < 20; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.style.backgroundColor = '#00A651';
+                dot.style.left = `${15 + Math.random() * 20}%`;
+                dot.style.top = `${15 + Math.random() * 25}%`;
+                classVizContainer.appendChild(dot);
+            }
+            for (let i = 0; i < 20; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.style.backgroundColor = '#00A651';
+                dot.style.left = `${65 + Math.random() * 20}%`;
+                dot.style.top = `${55 + Math.random() * 30}%`;
+                classVizContainer.appendChild(dot);
+            }
+        }
+        
+        function animateClassification() {
+            if (!classVizContainer || !animateClassBtn) return;
+            animateClassBtn.disabled = true;
+            createClassPoints();
+            classVizContainer.querySelectorAll('.boundary-line').forEach(el => el.remove());
+
+            const lines = [
+                { top: '0%', left: '50%', width: '2px', height: '100%' },
+                { top: '50%', left: '0%', width: '50%', height: '2px' },
+                { top: '50%', left: '50%', width: '50%', height: '2px' },
+                { top: '0%', left: '40%', width: '2px', height: '50%' },
+                { top: '50%', left: '85%', width: '2px', height: '50%' },
+                { top: '25%', left: '0%', width: '40%', height: '2px' },
+                { top: '75%', left: '50%', width: '35%', height: '2px' }
+            ];
+
+            lines.forEach(spec => {
+                const line = document.createElement('div');
+                line.classList.add('boundary-line');
+                Object.assign(line.style, spec);
+                classVizContainer.appendChild(line);
+            });
+
+            const lineElements = classVizContainer.querySelectorAll('.boundary-line');
+            
+            let delay = 100;
+            lineElements.forEach(line => {
+                setTimeout(() => {
+                    const isVertical = line.style.width === '2px';
+                    line.style.transform = isVertical ? 'scaleY(1)' : 'scaleX(1)';
+                }, delay);
+                delay += 400;
+            });
+
+            setTimeout(() => {
+                lineElements.forEach(el => {
+                    const isVertical = el.style.width === '2px';
+                    el.style.transform = isVertical ? 'scaleY(0)' : 'scaleX(0)';
+                });
+                animateClassBtn.disabled = false;
+            }, delay + 1500);
+        }
+        if (animateClassBtn) {
+            animateClassBtn.addEventListener('click', animateClassification);
+            createClassPoints();
+        }
+        
+        // --- Wafer and Distribution Viz ---
+        const waferMapGrid = document.querySelector('#wafer-map .wafer-grid');
+        const waferTooltip = document.getElementById('wafer-tooltip');
+        const highlightedDie = { x: 4, y: 1 };
+
+        if (waferMapGrid) {
+            for (let y = 0; y < 10; y++) {
+                for (let x = 0; x < 10; x++) {
+                    const die = document.createElement('div');
+                    die.classList.add('wafer-die');
+                    die.dataset.x = x;
+                    die.dataset.y = y;
+                    if (x === highlightedDie.x && y === highlightedDie.y) {
+                        die.classList.add('highlighted');
+                    }
+                    waferMapGrid.appendChild(die);
+                }
+            }
+            
+            waferMapGrid.addEventListener('mouseover', (e) => {
+                if (e.target.classList.contains('wafer-die')) {
+                    waferTooltip.textContent = `X: ${e.target.dataset.x}, Y: ${e.target.dataset.y}`;
+                }
+            });
+        }
+
+        const distViz = document.getElementById('dist-viz');
+        function createDistribution() {
+            if (!distViz) return;
+            distViz.innerHTML = '';
+            const numBars = 50;
+            for (let i = 0; i < numBars; i++) {
+                const bar = document.createElement('div');
+                bar.classList.add('dist-bar', 'w-full');
+                const position = (i - numBars / 2) / (numBars / 2);
+                const height = Math.exp(-0.5 * Math.pow(position * 2.5, 2)) * 90 + Math.random() * 10;
+                bar.style.height = `${height}%`;
+                distViz.appendChild(bar);
+            }
+        }
+        createDistribution();
+
+    </script>
+
+</body>
+</html>
